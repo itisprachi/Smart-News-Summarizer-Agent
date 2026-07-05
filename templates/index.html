@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart News Summarizer Agent</title>
+    <meta name="description" content="AI-powered news summarizer that fetches live articles, generates concise summaries, and classifies sentiment using a local LLM." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <!-- ── Animated background particles ── -->
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- ── Header ── -->
+    <header id="app-header">
+        <div class="header-inner">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="10" fill="url(#logo-grad)"/>
+                        <path d="M12 12h6v6h-6zM22 12h6v6h-6zM12 22h6v6h-6zM22 22h6v6h-6z" fill="rgba(255,255,255,.85)" rx="1.5"/>
+                        <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Smart News Summarizer</h1>
+                    <p class="tagline">AI-Powered News Intelligence</p>
+                </div>
+            </div>
+
+            <!-- Auth controls in header -->
+            <div class="header-right">
+                <div class="header-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Powered by Ollama</span>
+                </div>
+
+                <button id="theme-toggle-btn" class="btn-ghost btn-ghost--sm" aria-label="Toggle theme" style="padding: 6px; border-radius: 50%;">
+                    <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg id="theme-icon-sun" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+
+                <!-- Logged-out state -->
+                <div id="auth-buttons" class="auth-buttons">
+                    <button id="show-login-btn" class="btn-ghost">Log In</button>
+                    <button id="show-signup-btn" class="btn-accent-sm">Sign Up</button>
+                </div>
+
+                <!-- Logged-in state -->
+                <div id="user-menu" class="user-menu hidden">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <span id="user-name" class="user-name"></span>
+                    <button id="manage-subs-btn" class="btn-ghost btn-ghost--sm">Subscriptions</button>
+                    <button id="logout-btn" class="btn-ghost btn-ghost--sm">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Auth Modal ── -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal glass-card">
+            <button id="modal-close" class="modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+
+            <!-- Tab switcher -->
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab active" data-tab="login">Log In</button>
+                <button id="tab-signup" class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+
+            <!-- Login form -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+                </div>
+                <div id="login-error" class="auth-error hidden"></div>
+                <button type="submit" class="btn-accent" id="login-submit-btn">
+                    <span>Log In</span>
+                </button>
+            </form>
+
+            <!-- Signup form -->
+            <form id="signup-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="Jane Doe" required autocomplete="name" />
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div id="signup-error" class="auth-error hidden"></div>
+                <button type="submit" class="btn-accent" id="signup-submit-btn">
+                    <span>Create Account</span>
+                </button>
+            </form>
+
+            <!-- OTP Verification form -->
+            <form id="verify-form" class="auth-form hidden">
+                <div class="form-group">
+                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px; text-align: center;">We've sent a 6-digit OTP to your email. Please enter it to verify your account.</p>
+                </div>
+                <div class="form-group">
+                    <label for="verify-otp">6-Digit Code</label>
+                    <input type="text" id="verify-otp" placeholder="123456" required minlength="6" maxlength="6" autocomplete="off" style="text-align: center; letter-spacing: 4px; font-weight: bold; font-size: 18px;" />
+                </div>
+                <div id="verify-error" class="auth-error hidden"></div>
+                <button type="submit" class="btn-accent" id="verify-submit-btn">
+                    <span>Verify & Log In</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <main>
+        <!-- ── Search Panel ── -->
+        <section id="search-panel" class="glass-card">
+            <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search News
+            </h2>
+            <form id="search-form">
+                <div class="form-grid">
+                    <div class="form-group form-group--topic">
+                        <label for="topic-input">Topic</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                id="topic-input"
+                                name="topic"
+                                placeholder="e.g. Artificial Intelligence, Cricket, Tesla …"
+                                required
+                                autocomplete="off"
+                            />
+                            <span class="input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 002-2V7l-5-5H6a2 2 0 00-2 2v4"/><path d="M14 2v5h5"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="language-select">Language</label>
+                        <select id="language-select" name="language">
+                            <option value="en" selected>English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="hi">Hindi</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max-articles-input">Max Articles</label>
+                        <input
+                            type="number"
+                            id="max-articles-input"
+                            name="max_articles"
+                            value="5"
+                            min="1"
+                            max="20"
+                        />
+                    </div>
+
+                    <div class="form-group form-group--btn">
+                        <button type="submit" id="summarize-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span>Summarize</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick-pick chips -->
+                <div class="quick-chips">
+                    <span class="chip-label">Quick picks:</span>
+                    <button type="button" class="chip" data-topic="Artificial Intelligence">🤖 AI</button>
+                    <button type="button" class="chip" data-topic="Cricket">🏏 Cricket</button>
+                    <button type="button" class="chip" data-topic="Tesla">🚗 Tesla</button>
+                    <button type="button" class="chip" data-topic="India">🇮🇳 India</button>
+                    <button type="button" class="chip" data-topic="Finance">💰 Finance</button>
+                    <button type="button" class="chip" data-topic="Space">🚀 Space</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ── Status bar ── -->
+        <div id="status-bar" class="hidden">
+            <div class="status-inner">
+                <div class="spinner"></div>
+                <span id="status-text">Fetching articles …</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- ── Error display ── -->
+        <div id="error-display" class="hidden glass-card error-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- ── Results meta ── -->
+        <div id="results-meta" class="hidden">
+            <span id="results-count"></span>
+            <span id="results-date"></span>
+        </div>
+
+        <!-- ── Email bar (visible after results, only for logged-in users) ── -->
+        <div id="email-bar" class="hidden glass-card">
+            <div class="email-bar-inner">
+                <div class="email-bar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span>Send summary to <strong id="email-bar-address"></strong></span>
+                </div>
+                <div class="email-bar-form" style="display: flex; gap: 10px;">
+                    <button type="button" id="send-email-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <span>Email Summary</span>
+                    </button>
+                    <button type="button" id="subscribe-btn" class="btn-accent-sm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span id="subscribe-text">Subscribe to Topic</span>
+                    </button>
+                </div>
+            </div>
+            <div id="email-status" class="email-status hidden"></div>
+        </div>
+
+        <!-- ── Login prompt (shown if not logged in after results) ── -->
+        <div id="login-prompt" class="hidden glass-card">
+            <div class="email-bar-inner">
+                <div class="email-bar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span>Want to receive results via email?</span>
+                </div>
+                <div class="email-bar-form">
+                    <button type="button" id="prompt-login-btn" class="btn-accent-sm">
+                        Log In / Sign Up
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Article cards grid ── -->
+        <section id="results-grid" class="card-grid"></section>
+    </main>
+
+    <!-- ── Footer ── -->
+    <footer>
+        <p>Built with <span class="heart">♥</span> using FastAPI · Ollama · NewsAPI</p>
+    </footer>
+
+    <!-- ── Subscriptions Modal ── -->
+    <div id="subs-modal" class="modal-overlay hidden">
+        <div class="modal glass-card">
+            <button id="subs-modal-close" class="modal-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3 style="margin-bottom: 20px; color: var(--text-primary); text-align: center;">My Newsletters</h3>
+            <ul id="subs-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Dynamically populated -->
+            </ul>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

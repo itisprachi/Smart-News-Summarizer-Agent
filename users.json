@@ -1,0 +1,41 @@
+{
+    "prachichoudhary.jun@gmail.com": {
+        "id": "16c469c646d1",
+        "name": "Prachi",
+        "email": "prachichoudhary.jun@gmail.com",
+        "password_hash": "ace635c225c144d1$f023f8df70b301dc18eb3fde42a6d09a5bf14a89dff53e7d64752e6dfe7d3fc9",
+        "subscriptions": [
+            "Space"
+        ]
+    },
+    "mehak@gmail.com": {
+        "id": "25ef7b2ae3a4",
+        "name": "Mehak",
+        "email": "mehak@gmail.com",
+        "password_hash": "fa253d8a6b854845$ab4926361d1bfcd68be8e61e8623fb7f67825e1b0b5178968a49f2db3c210671"
+    },
+    "jojo@email.com": {
+        "id": "9534869bf615",
+        "name": "jojo",
+        "email": "jojo@email.com",
+        "password_hash": "1b3f933ba5324c8b$2828d2c3105fac38370bdca888941cd4a4282d545b360eaecaef00fe7630c0c3"
+    },
+    "johnabcd@gmail.com": {
+        "id": "83b371972b41",
+        "name": "john",
+        "email": "johnabcd@gmail.com",
+        "password_hash": "d4eedc343fcf4d08$10b73603d92c3eaa3a663f8995540d6319090a3857411b55efcde534b24cd677"
+    },
+    "rishavraj.jun@gmail.com": {
+        "id": "ddc4b1cbfdbe",
+        "name": "Rishav Raj",
+        "email": "rishavraj.jun@gmail.com",
+        "password_hash": "7224fdd036b14c7c$136a07c47f1fc9f5c0712bede461a2f3c0205bfb404c4bc5697bd5e697ade77a",
+        "saved_topics": [
+            "Space"
+        ],
+        "subscriptions": [
+            "latest news"
+        ]
+    }
+}
